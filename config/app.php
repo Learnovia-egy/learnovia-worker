@@ -14,6 +14,9 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'is_cloud_storage' => env('IS_CLOUD_STORAGE', false),
+    'filesystem_cloud' => env('FILESYSTEM_CLOUD', 'local'),
+    'cloud_base_url' => env('R2_URL'),
 
     /*
     |--------------------------------------------------------------------------

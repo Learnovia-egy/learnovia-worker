@@ -45,13 +45,13 @@ class CloudService
     /**
      * @throws \Exception
      */
-    public function downloadFile(string $clientName, string $file_name): string
+    public function downloadFile(string $clientName, string $media_path): string
     {
         $localDisk = Storage::disk('local');
 
-        $relativePath = $clientName . '/downloaded/' . $file_name;
+        $relativePath = $clientName . '/downloaded/' . $media_path;
 
-        $stream = UploadHelper::StorageCloudDriver()->readStream(StorageTypes::MEDIA . '/' . $file_name);
+        $stream = UploadHelper::StorageCloudDriver()->readStream(StorageTypes::MEDIA . '/' . $media_path);
         $localDisk->writeStream($relativePath, $stream);
         if ($localDisk->exists($relativePath))
             return $relativePath;

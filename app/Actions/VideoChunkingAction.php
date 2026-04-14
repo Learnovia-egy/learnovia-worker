@@ -24,7 +24,6 @@ readonly class VideoChunkingAction
     public function handle(int $client_video_id): void
     {
         $clientVideo = ClientVideo::find($client_video_id);
-        $clientName = $clientVideo->client->name;
         $video = $this->DownloadVideoAction->handle($clientVideo->video_id, $clientVideo->media_path);
         ProcessVideoJob::dispatchSync($video, $this->videoService);
 

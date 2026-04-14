@@ -31,7 +31,7 @@ class DownloadVideoAction
         $clientName = $client['client_name'];
         $file_name = PATHINFO($media_path, PATHINFO_BASENAME);
 
-        $relativeFilePath = $this->cloudService->downloadFile($clientName, $file_name);
+        $relativeFilePath = $this->cloudService->downloadFile($clientName, $media_path);
         $metadata = $this->videoService->getMetadata($relativeFilePath);
         $temp_path = $clientName . '/tmp/' . $file_name;
         $video = new Video($id, $file_name, $temp_path, 'downloaded', $metadata);
