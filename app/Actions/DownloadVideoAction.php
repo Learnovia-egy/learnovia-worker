@@ -29,10 +29,11 @@ class DownloadVideoAction
     {
         $client = Cache::get('client_base_url_' . $id);
         $clientName = $client['client_name'];
+        $clientBaseUrl = $client['base_url'];
         $file_name = PATHINFO($media_path, PATHINFO_BASENAME);
 
         $relativeFilePath = $this->cloudService->downloadFile($clientName, $media_path);
-        $metadata = $this->videoService->getMetadata($relativeFilePath);
+        $metadata = $this->videoService->getMetadata($clientBaseUrl, $relativeFilePath);
         $temp_path = $clientName . '/tmp/' . $file_name;
         $video = new Video($id, $file_name, $temp_path, 'downloaded', $metadata);
 

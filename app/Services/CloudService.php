@@ -51,7 +51,7 @@ class CloudService
 
         $relativePath = $clientName . '/downloaded/' . $media_path;
 
-        $stream = UploadHelper::StorageCloudDriver()->readStream(StorageTypes::MEDIA . '/' . $media_path);
+        $stream = UploadHelper::StorageCloudDriver()->readStream($media_path);
         $localDisk->writeStream($relativePath, $stream);
         if ($localDisk->exists($relativePath))
             return $relativePath;

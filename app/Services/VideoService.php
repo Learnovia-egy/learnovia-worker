@@ -24,7 +24,7 @@ class VideoService
         //
     }
 
-    public function getMetadata(string $filePath): array
+    public function getMetadata(string $clientBaseUrl, string $filePath): array
     {
         try {
             // 3. Open the file from STORAGE
@@ -40,7 +40,7 @@ class VideoService
                 'duration' => $media->getDurationInSeconds()
             ];
 
-            Http::post(config('app.learnovia_base_url') . 'api/video', [
+            Http::post($clientBaseUrl . 'api/video', [
 
                 'metadata' => $metadata
             ]);
