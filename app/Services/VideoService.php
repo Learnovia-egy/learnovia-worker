@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Debugger;
+use App\DebuggerMsgEnum;
 use App\Domains\Video;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Promises\LazyPromise;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
@@ -24,6 +25,9 @@ class VideoService
         //
     }
 
+    /**
+     * @throws Exception
+     */
     public function getMetadata(string $clientBaseUrl, string $filePath): array
     {
         try {
@@ -40,10 +44,16 @@ class VideoService
                 'duration' => $media->getDurationInSeconds()
             ];
 
-            Http::post($clientBaseUrl . 'api/video', [
+            try {
+                Http::timeout(10)
+                    ->post($clientBaseUrl . 'api/video', [
+                        'metadata' => $metadata
+                    ]);
+            } catch (Exception $e) {
+                Log::channel('uncompleted_uploads')
+                    ->warning('Failed to post metadata, skipping: ' . $e->getMessage());
+            }
 
-                'metadata' => $metadata
-            ]);
             return $metadata;
         } catch (Exception $e) {
             // Cleanup: If FFmpeg fails, delete the file
@@ -56,23 +66,34 @@ class VideoService
     }
 
     /**
-     * @throws ConnectionException
      * @throws Exception
      */
-    public function update(string $id, $data, ?Video &$video = null): LazyPromise|PromiseInterface|Response
+    public function update(string $id, $data, ?Video &$video = null): LazyPromise|PromiseInterface|Response|null
     {
         $client = Cache::get('client_base_url_' . $id);
         $clientBaseUrl = $client['base_url'];
-        $res = Http::patch($clientBaseUrl . 'api/video/' . $id, $data);
-        if ($res->failed()) {
-            // slack webhook
-            throw new Exception('Video processing failed');
-        }
+        //<editor-fold desc="debug">
+        Debugger::debug($data, DebuggerMsgEnum::REQUEST->label('video update'));
+//</editor-fold>
+
         if ($video !== null) {
             foreach ($data as $key => $value) {
                 $video->$key = $value;
             }
         }
-        return $res;
+        //<editor-fold desc="debug">
+        Debugger::debug($video, DebuggerMsgEnum::VAR->label('video updated'));
+        //</editor-fold>
+
+        try {
+            $res = Http::timeout(10)->patch($clientBaseUrl . 'api/videos/' . $id, $data);
+            if ($res->failed()) {
+                Debugger::response($res, DebuggerMsgEnum::RESPONSE->label('video update failed'));
+            }
+            return $res;
+        } catch (Exception $e) {
+            Log::warning('Video update skipped, could not reach client: ' . $e->getMessage());
+            return null;
+        }
     }
 }

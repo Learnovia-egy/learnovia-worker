@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\Constants\StorageTypes;
+use App\Debugger;
+use App\DebuggerMsgEnum;
 use App\Domains\Video;
 use App\Helpers\UploadHelper;
-use Illuminate\Support\Facades\Cache;
+use Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -37,9 +38,9 @@ class CloudService
         return \Cache::driver('upload_url_queue')->forget(request()->upload_id);
     }
 
-    public function uploadFile(string $from, string $dest): bool
+    public function uploadFile(string $in, string $localFile): bool
     {
-        return UploadHelper::StorageCloudDriver()->put($dest, fopen($from . $dest, 'r'));
+        return UploadHelper::StorageCloudDriver()->put($in, fopen(storage_path($localFile), 'r'));
     }
 
     /**
@@ -49,10 +50,19 @@ class CloudService
     {
         $localDisk = Storage::disk('local');
 
-        $relativePath = $clientName . '/downloaded/' . $media_path;
-
+        $relativePath = '/downloaded/' . $media_path;
+        //<editor-fold desc="debug">
+        Debugger::debug($media_path, DebuggerMsgEnum::VAR->label('downloading from cloud storage on path:'));
+        //</editor-fold>
         $stream = UploadHelper::StorageCloudDriver()->readStream($media_path);
+        //<editor-fold desc="debug">
+        Debugger::debug($relativePath, DebuggerMsgEnum::VAR->label('writing stream to relativePath'));
+        //</editor-fold>
         $localDisk->writeStream($relativePath, $stream);
+        //<editor-fold desc="debug">
+        Debugger::debug($localDisk->exists($relativePath), DebuggerMsgEnum::VAR->label('is file exists in / downloaded ? '));
+//</editor-fold>
+
         if ($localDisk->exists($relativePath))
             return $relativePath;
 //            return $localDisk->readStream($relativePath);
@@ -65,21 +75,56 @@ class CloudService
      */
     public function uploadKeyAndChunkedFiles(Video $video): bool
     {
-        $clientName = Cache::get('client_base_url_' . $video->id);
-        $videosPath= "app/public/$clientName";
-        $keyPath = "$clientName/keys/$video->id";
-        if (!Storage::exists($keyPath))
-            throw new \Exception('Key file not found');
+        $client = Cache::get('client_base_url_' . $video->id);
+        //<editor-fold desc="debug">
+        Debugger::debug($client, DebuggerMsgEnum::VAR->label('Cache client_base_url_'));
+        //</editor-fold>
 
-        $this->uploadFile("app/$clientName", $keyPath);
+        if ($client === null) throw new \Exception('Client not found');
+        $clientName = $client['client_name'];
+        $videosPath = "app/public/$clientName";
+        //<editor-fold desc="debug">
+        Debugger::debug($videosPath, DebuggerMsgEnum::VAR->label('local video path'));
+        //</editor-fold>
+
+        $keyPath = $video->key_path;
+        //<editor-fold desc="debug">
+        Debugger::debug($keyPath, DebuggerMsgEnum::VAR->label('key path'));
+        Debugger::debug(Storage::disk('local')->path($keyPath), DebuggerMsgEnum::VAR->label('storage path'));
+        //</editor-fold>
+
+        if (!Storage::disk('local')->exists($keyPath))
+            throw new \Exception('Key file not found');
+        $localFile = 'app/' . $keyPath;
+        //<editor-fold desc="debug">
+        Debugger::debug($localFile, DebuggerMsgEnum::VAR->label('uploading key file to cloud storage'));
+        //</editor-fold>
+        $stat = $this->uploadFile($keyPath, $localFile);
+        //<editor-fold desc="debug">
+        Debugger::debug($stat, DebuggerMsgEnum::VAR->label('upload status'));
+        //</editor-fold>
+
         $chunkFilesPath = Storage::disk('public')->files($video->files_path);
+        if (empty($chunkFilesPath)) throw new \Exception('Chunk files not found');
+        //<editor-fold desc="debug">
+        Debugger::debug($chunkFilesPath, DebuggerMsgEnum::VAR->label('ts files path'));
+        //</editor-fold>
+
         foreach ($chunkFilesPath as $chunkFilePath) {
-            if ($this->uploadFile($videosPath, $chunkFilePath))
+            $localFile = 'app/public/' . $chunkFilePath;
+            if ($this->uploadFile($chunkFilePath, $localFile))
                 Storage::disk('public')->delete($chunkFilePath);
             else
                 throw new \Exception('Uploading file failed... ' . $chunkFilePath);
         }
-        Storage::disk('public')->deleteDirectory($video->files_path);
+        //<editor-fold desc="debug">
+        Debugger::debug('Finished uploading...');
+        //</editor-fold>
+        $stat = Storage::disk('public')->deleteDirectory($video->files_path);
+        //<editor-fold desc="debug">
+        Debugger::debug($stat, DebuggerMsgEnum::VAR->label('is directory deleted?'));
+        //</editor-fold>
+
         return true;
     }
 

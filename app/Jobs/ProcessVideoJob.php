@@ -2,6 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Debugger;
+use App\DebuggerMsgEnum;
 use App\Domains\Video;
 use App\Services\VideoService;
 use Exception;
@@ -26,7 +28,7 @@ class ProcessVideoJob implements ShouldQueue
     public $backoff = [60, 180]; // wait 1min before retry 1, 3min before retry 2
 
     public function __construct(
-        private readonly Video        &$video,
+        private Video                 &$video,
         private readonly VideoService $videoService,
     )
     {
@@ -37,8 +39,17 @@ class ProcessVideoJob implements ShouldQueue
      */
     public function handle(): void
     {
+        //<editor-fold desc="debug">
+        Debugger::debug('Starting ProcessVideoJob');
+        //</editor-fold>
         $videoId = $this->video->id;
+        //<editor-fold desc="debug">
+        Debugger::debug($videoId, DebuggerMsgEnum::VAR->label('videoId in ProcessVideoJob'));
+        //</editor-fold>
         $client = Cache::get('client_base_url_' . $videoId);
+        //<editor-fold desc="debug">
+        Debugger::debug($client, DebuggerMsgEnum::VAR->label('get cache key: client_base_url_'));
+        //</editor-fold>
         $clientName = $client['client_name'];
         $clientBaseUrl = $client['base_url'];
 
@@ -48,29 +59,56 @@ class ProcessVideoJob implements ShouldQueue
 
         try { // --- PATH CONFIGURATION ---
             $tempVideoPath = storage_path("app/{$this->video->temp_path}");
+            //<editor-fold desc="debug">
+            Debugger::debug($tempVideoPath, DebuggerMsgEnum::VAR->label('temporary video path'));
+            //</editor-fold>
             $videoPath = $clientName . "/videos/{$videoId}";
+            //<editor-fold desc="debug">
+            Debugger::debug($videoPath, DebuggerMsgEnum::VAR->label('videoPath in ProcessVideoJob'));
+            //</editor-fold>
             // Output Directory (Public for .m3u8 and .ts)
             $publicDir = storage_path('app/public/' . $videoPath);
-
+            //<editor-fold desc="debug">
+            Debugger::debug($publicDir, DebuggerMsgEnum::VAR->label('publicDir in ProcessVideoJob'));
+//</editor-fold>
             // Secure Directory (Private for .key files)
             $keysDir = storage_path("app/{$clientName}/keys");
-
+            //<editor-fold desc="debug">
+            Debugger::debug($keysDir, DebuggerMsgEnum::VAR->label('keysDir in ProcessVideoJob'));
+//</editor-fold>
             // Create Directories
+            //<editor-fold desc="debug">
+            Debugger::debug(!is_dir($publicDir), 'is publicDir dir ?');
+            Debugger::debug(!is_dir($keysDir), 'is publicDir dir ?');
+            //</editor-fold>
             if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
             if (!is_dir($keysDir)) mkdir($keysDir, 0755, true); // Private!
 
             // --- STEP 1: GENERATE INITIAL KEY ---
             $initialKey = random_bytes(16);
             $initialKeyPath = "{$publicDir}/initial.key";
+            //<editor-fold desc="debug">
+            Debugger::debug($initialKey, DebuggerMsgEnum::VAR->label('initialKey in ProcessVideoJob'));
+            Debugger::debug($initialKeyPath, DebuggerMsgEnum::VAR->label('initialKeyPath in ProcessVideoJob'));
+            //</editor-fold>
             file_put_contents($initialKeyPath, $initialKey);
 
             // --- STEP 2: CREATE KEY INFO FILE ---
-            $keyInfoPath = storage_path("app/{$clientName}/temp/{$videoId}.keyinfo");
+            $dir = "app/{$clientName}/tmp";
+            $keyInfoPath = storage_path("$dir/{$videoId}.keyinfo");
+            //<editor-fold desc="debug">
+            Debugger::debug($keyInfoPath, DebuggerMsgEnum::VAR->label('KeyInfo Path'));
+            Debugger::debug(Storage::exists($dir), DebuggerMsgEnum::VAR->label('is keyInfoPath\'s dir exists ?'));
+            //</editor-fold>
             // We use a placeholder URL here that we will replace in Step 5
             $placeholderUrl = "https://placeholder-url.com/key";
 
+            $data = "{$placeholderUrl}\n{$initialKeyPath}";
+            //<editor-fold desc="debug">
+            Debugger::debug($data, DebuggerMsgEnum::VAR->label('{$placeholderUrl}\n{$initialKeyPath}'));
+            //</editor-fold>
             // Format: URL \n Path
-            file_put_contents($keyInfoPath, "{$placeholderUrl}\n{$initialKeyPath}");
+            file_put_contents($keyInfoPath, $data);
 
             // --- STEP 3: INSPECT VIDEO (FFPROBE) ---
 
@@ -82,17 +120,39 @@ class ProcessVideoJob implements ShouldQueue
             $probeCmd = "ffprobe -v quiet -print_format json -show_streams " . escapeshellarg($tempVideoPath);
             $jsonOutput = shell_exec($probeCmd);
             $data = json_decode($jsonOutput, true);
+            //<editor-fold desc="debug">
+            Debugger::debug($probeCmd, DebuggerMsgEnum::VAR->label('ffprobe command'));
+            Debugger::debug($jsonOutput, DebuggerMsgEnum::VAR->label('shell exec output from ffprobe'));
+            Debugger::debug($data, DebuggerMsgEnum::VAR->label('after decoding'));
+            //</editor-fold>
 
+            //<editor-fold desc="debug">
+            Debugger::debug(isset($data['streams']), DebuggerMsgEnum::VAR->label('is data streams exist'));
+            //</editor-fold>
             if (isset($data['streams'])) {
                 foreach ($data['streams'] as $stream) {
-                    if ($stream['codec_type'] === 'video') {
+                    $isCodecTypeVideo = $stream['codec_type'] === 'video';
+                    $isCodecTypeAudio = $stream['codec_type'] === 'audio';
+                    //<editor-fold desc="debug">
+                    Debugger::debug($isCodecTypeVideo, DebuggerMsgEnum::VAR->label('is stream CodecType = Video'));
+                    Debugger::debug($isCodecTypeAudio, DebuggerMsgEnum::VAR->label('is stream CodecType = Audio'));
+                    //</editor-fold>
+                    if ($isCodecTypeVideo) {
                         // If it's already H.264, we can COPY (Fast!)
-                        if ($stream['codec_name'] === 'h264') {
+                        $isCodecNameH264 = $stream['codec_name'] === 'h264';
+                        //<editor-fold desc="debug">
+                        Debugger::debug($isCodecNameH264, DebuggerMsgEnum::VAR->label('is stream CodecName = H264'));
+                        //</editor-fold>
+                        if ($isCodecNameH264) {
                             $videoCodecFlag = 'copy';
                         }
-                    } elseif ($stream['codec_type'] === 'audio') {
+                    } elseif ($isCodecTypeAudio) {
                         // If it's already AAC, we can COPY (Fast!)
-                        if ($stream['codec_name'] === 'aac') {
+                        $isCodecNameAac = $stream['codec_name'] === 'aac';
+                        //<editor-fold desc="debug">
+                        Debugger::debug($isCodecNameAac, DebuggerMsgEnum::VAR->label('$is stream CodecName = Aac'));
+                        //</editor-fold>
+                        if ($isCodecNameAac) {
                             $audioCodecFlag = 'copy';
                         }
                     }
@@ -103,6 +163,10 @@ class ProcessVideoJob implements ShouldQueue
 
             // --- STEP 4: RUN FFMPEG ---
             $playlistPath = "{$publicDir}/playlist.m3u8";
+
+            //<editor-fold desc="debug">
+            Debugger::debug($playlistPath, DebuggerMsgEnum::VAR->label('playlistPath in ProcessVideoJob'));
+            //</editor-fold>
 
             $cmd = [
                 'ffmpeg',
@@ -119,10 +183,19 @@ class ProcessVideoJob implements ShouldQueue
 
             $commandString = implode(' ', $cmd);
             exec($commandString, $output, $returnCode);
+            //<editor-fold desc="debug">
+            Debugger::debug($commandString, DebuggerMsgEnum::VAR->label('ffmpeg command string'));
+            Debugger::debug($output, DebuggerMsgEnum::VAR->label('ffmpeg output'));
+            Debugger::debug($returnCode, DebuggerMsgEnum::VAR->label('ffmpeg returnCode'));
+            //</editor-fold>
 
             // --- NEW: FALLBACK MECHANISM ---
             // If it failed AND we were trying to take the fast route (copy)...
-            if ($returnCode !== 0 && ($videoCodecFlag === 'copy' || $audioCodecFlag === 'copy')) {
+            $isFastCopyFailed = $returnCode !== 0 && ($videoCodecFlag === 'copy' || $audioCodecFlag === 'copy');
+            //<editor-fold desc="debug">
+            Debugger::debug($isFastCopyFailed, DebuggerMsgEnum::VAR->label('is fast copy failed ?'));
+            //</editor-fold>
+            if ($isFastCopyFailed) {
                 Log::warning("Fast copy failed for Video ID: {$videoId} (likely corrupt packet). Falling back to re-encoding.");
 
                 // Delete the partially generated files from the failed attempt
@@ -139,10 +212,19 @@ class ProcessVideoJob implements ShouldQueue
                 $commandString = implode(' ', $cmd);
                 $output = []; // Clear previous output
                 exec($commandString, $output, $returnCode);
+
+                //<editor-fold desc="debug">
+                Debugger::debug($commandString, DebuggerMsgEnum::VAR->label('new ffmpeg command string'));
+                Debugger::debug($output, DebuggerMsgEnum::VAR->label('new ffmpeg output'));
+                Debugger::debug($returnCode, DebuggerMsgEnum::VAR->label('new ffmpeg returnCode'));
+                //</editor-fold>
             }
 
             // Handle Hard Errors (if re-encoding fails, or if it wasn't a copy to begin with)
             if ($returnCode !== 0) {
+                //<editor-fold desc="debug">
+                Debugger::debug('YES', DebuggerMsgEnum::VAR->label('is returnCode 0'));
+                //</editor-fold>
                 $this->videoService->update($videoId, [
                     'status' => 'failed',
                 ], $this->video);
@@ -154,25 +236,43 @@ class ProcessVideoJob implements ShouldQueue
 
             // 1. Generate a secure UUID for the key we just used
             $keyUuid = Str::uuid()->toString();
-
+            $keyPath = "{$keysDir}/{$keyUuid}";
+            $relativeKeyPath = str_replace(storage_path('app') . '/', '', $keyPath);
+            //<editor-fold desc="debug">
+            Debugger::debug($relativeKeyPath, DebuggerMsgEnum::VAR->label('keyUuid in ProcessVideoJob'));
+            Debugger::debug(file_exists($initialKeyPath), DebuggerMsgEnum::VAR->label('is initialKeyPath exist ?'));;
+//</editor-fold>
             // 2. Move the initial key from Public -> Secure folder
             // Note: FFmpeg used "initial.key" physically. We move it now.
             if (file_exists($initialKeyPath)) {
-                rename($initialKeyPath, "{$keysDir}/{$keyUuid}");
+                //<editor-fold desc="debug">
+                Debugger::debug('renaming initialKeyPath to ' . "{$keysDir}/{$keyUuid}", DebuggerMsgEnum::VAR->label('renaming initialKeyPath'));
+                //</editor-fold>
+                rename($initialKeyPath, $keyPath);
             }
 
             // 3. Update the Playlist to point to YOUR API
+            //<editor-fold desc="debug">
+            Debugger::debug(file_exists($playlistPath), DebuggerMsgEnum::VAR->label('Update the Playlist to point to YOUR API'));
+            //</editor-fold>
             if (file_exists($playlistPath)) {
                 $content = file_get_contents($playlistPath);
 
                 // Replace the placeholder URL with your actual Laravel Route
                 // Ensure you have a named route 'api.video.key' defined in api.php
-                $newUrl = route('api.video.key', ['clientName' => $clientName, 'key' => $keyUuid]);
+                $newUrl = config('app.cloud_base_url') . $relativeKeyPath;
                 $content = str_replace($placeholderUrl, $newUrl, $content);
+                //<editor-fold desc="debug">
+                Debugger::debug($newUrl, DebuggerMsgEnum::VAR->label('route url'));
+                Debugger::debug($content, DebuggerMsgEnum::VAR->label('playlist content'));
+                //</editor-fold>
 
                 file_put_contents($playlistPath, $content);
             }
 
+            //<editor-fold desc="debug">
+            Debugger::debug('remove temp_path: ' . $this->video->temp_path, DebuggerMsgEnum::VAR->label('remove temp_path:'));
+            //</editor-fold>
             // --- STEP 6: CLEANUP & FINISH ---
             Storage::delete($this->video->temp_path); // Delete original upload
             if (file_exists($keyInfoPath)) unlink($keyInfoPath); // Delete info file
@@ -182,15 +282,23 @@ class ProcessVideoJob implements ShouldQueue
                     'status' => 'completed',
                     'segments_count' => count(glob("{$publicDir}/seg_*.ts")),
                     'playlist_url' => $clientBaseUrl . "api/videos/{$videoId}/playlist.m3u8",
+                    'key_path' => $relativeKeyPath,
                     'files_path' => $videoPath
                 ], $this->video);
+            //<editor-fold desc="debug">
+            Debugger::debug('FINISHED ProcessVideoJob');
+            //</editor-fold>
         } catch (Exception $e) {
             Log::error("Error Processing Video ID: {$videoId} - " . $e->getMessage());
 
             // Only re-throw if we still have attempts left,
             // so the job gets re-queued by Laravel
 //
-            if ($this->attempts() < $this->tries) {
+            //<editor-fold desc="debug">
+            $isAttempLessThanTries = $this->attempts() < $this->tries;
+            Debugger::debug($isAttempLessThanTries, DebuggerMsgEnum::VAR->label('is attempLessThanTries ' . $this->tries));
+            //</editor-fold>
+            if ($isAttempLessThanTries) {
                 $this->videoService->update($videoId, [
                     'retries' => $this->attempts() - 1,
                     'status' => 'pending',

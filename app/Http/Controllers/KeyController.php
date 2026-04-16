@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Contracts\Foundation\Application;
+use App\Constants\UploadTypeEnum;
+use App\Helpers\UploadHelper;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ class KeyController extends Controller
      * Get the HLS key with polymorphic encryption.
      *
      * @param string $keyId
-     * @return Application|ResponseFactory|\Illuminate\Foundation\Application|JsonResponse|Response
+     * @return JsonResponse|Response|ResponseFactory
      */
     public function getKey(string $clientName, string $keyId)
     {
@@ -23,11 +24,7 @@ class KeyController extends Controller
         $originalKey = Cache::remember("video_key_{$keyId}", 60 * 60 * 24, function () use ($clientName, $keyId) {
 
             // This block only runs ONCE.
-            $path = storage_path("app/{$clientName}/keys/{$keyId}");
-
-            if (!file_exists($path)) return null;
-
-            return file_get_contents($path);
+            return UploadHelper::StorageCloudDriver()->get("$clientName/keys/{$keyId}");
         });
 
         if (strlen($originalKey) !== 16) {

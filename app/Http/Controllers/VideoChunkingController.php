@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Debugger;
+use App\DebuggerMsgEnum;
 use App\Jobs\CloudChunkingProcessJob;
 use App\Models\Client;
 use Illuminate\Http\Request;
@@ -30,11 +32,16 @@ class VideoChunkingController extends Controller
         ]);
 
         $client = Client::updateOrCreate(['name' => $request->client_name, 'base_url' => $request->client_base_url]);
+        Debugger::debug($client, DebuggerMsgEnum::OBJECT_CREATION->label('Client'));
         Storage::disk('local')->makeDirectory($client->name);
 
-        Cache::put('client_base_url_' . $request->video_id, ['base_url'=>$client->base_url, 'name'=>$client->name]);
+        $data = ['base_url' => $client->base_url, 'client_name' => $client->name];
+        Cache::put('client_base_url_' . $request->video_id, $data);
+
+        Debugger::debug($data, DebuggerMsgEnum::OBJECT_CREATION->label('Cache client_base_url_'));
 
         $clientVideo = $client->clientVideos()->create(['video_id' => $request->video_id, 'media_path' => $request->media_path]);
+        Debugger::debug($clientVideo, DebuggerMsgEnum::OBJECT_CREATION->label('ClientVideo'));
         // --- http send to PROCESS-VIDEO SERVER ----
         CloudChunkingProcessJob::dispatch($clientVideo->id);
         return response()->json(['message' => 'Video chunking process started']);
