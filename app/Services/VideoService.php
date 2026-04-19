@@ -94,7 +94,7 @@ class VideoService
                 Debugger::response($res, DebuggerMsgEnum::RESPONSE->label('video update failed'));
             }
             //<editor-fold desc="debug">
-            Debugger::debug($res, DebuggerMsgEnum::RESPONSE->value);
+            Debugger::debug($res, DebuggerMsgEnum::RESPONSE->label('video api update response'));
             //</editor-fold>
             return $res;
         } catch (Exception $e) {
