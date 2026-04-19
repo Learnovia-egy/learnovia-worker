@@ -78,7 +78,8 @@ class VideoService
 
         if ($video !== null) {
             foreach ($data as $key => $value) {
-                $video->$key = $value;
+                if (property_exists($video, $key))
+                    $video->$key = $value;
             }
         }
         $api = $clientBaseUrl . 'api/videos/' . $id;
