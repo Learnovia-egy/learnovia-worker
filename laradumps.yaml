@@ -1,4 +1,5 @@
 app:
+    dispatcher: curl
     primary_host: 127.0.0.1
     secondary_host: host.docker.internal
     port: 9191
@@ -16,35 +17,35 @@ observers:
     queries: false
     slow_queries: false
     mail: false
-    logs: false
+    logs: true
     http: false
     jobs: false
     commands: false
     scheduled_commands: false
     gate: false
     cache: false
+    brain: false
 xdebug:
     client_host: 0.0.0.0
     client_port: 9003
 code_snippet:
-    above: 9
+    above: 7
     below: 3
 logs:
-    info: false
-    warning: false
-    emergency: false
+    info: true
+    warning: true
+    emergency: true
     alert: false
-    debug: false
+    debug: true
     error: true
     critical: true
     notice: true
-    vendor: false
-    deprecated_message: false
+    vendor: true
+    deprecated_message: true
+    boost_info: false
 slow_queries:
     threshold_in_ms: 500
+extra:
+    context: false
 queries:
-    only_duplicated: false
-    select: true
-    insert: true
-    update: true
-    delete: true
+    explain: false

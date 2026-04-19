@@ -81,12 +81,14 @@ class VideoService
                 $video->$key = $value;
             }
         }
+        $api = $clientBaseUrl . 'api/videos/' . $id;
         //<editor-fold desc="debug">
         Debugger::debug($video, DebuggerMsgEnum::VAR->label('video updated'));
+        Debugger::debug($api, DebuggerMsgEnum::VAR->label('callback video update api'));
         //</editor-fold>
 
         try {
-            $res = Http::timeout(10)->patch($clientBaseUrl . 'api/videos/' . $id, $data);
+            $res = Http::timeout(10)->patch($api, $data);
             if ($res->failed()) {
                 Debugger::response($res, DebuggerMsgEnum::RESPONSE->label('video update failed'));
             }
