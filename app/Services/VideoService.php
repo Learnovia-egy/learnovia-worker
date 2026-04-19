@@ -88,7 +88,7 @@ class VideoService
         //</editor-fold>
 
         try {
-            $res = Http::timeout(10)->patch($api, $data);
+            $res = Http::timeout(30)->patch($api, $data);
             if ($res->failed()) {
                 Debugger::response($res, DebuggerMsgEnum::RESPONSE->label('video update failed'));
             }
