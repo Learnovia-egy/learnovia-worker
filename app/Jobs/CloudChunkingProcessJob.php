@@ -14,7 +14,7 @@ class CloudChunkingProcessJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 3600; // Allow 1 hour for processing
+    public $timeout = 0;
 
     /**
      * Create a new job instance.

@@ -23,7 +23,7 @@ class ProcessVideoJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $timeout = 3600; // Allow 1 hour for processing
+    public $timeout = 0;
     public $tries = 3;        // 1 initial + 2 retries
     public $backoff = [60, 180]; // wait 1min before retry 1, 3min before retry 2
 
