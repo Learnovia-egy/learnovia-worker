@@ -92,6 +92,9 @@ class VideoService
             if ($res->failed()) {
                 Debugger::response($res, DebuggerMsgEnum::RESPONSE->label('video update failed'));
             }
+            //<editor-fold desc="debug">
+            Debugger::debug($res, DebuggerMsgEnum::RESPONSE->value);
+            //</editor-fold>
             return $res;
         } catch (Exception $e) {
             Log::warning('Video update skipped, could not reach client: ' . $e->getMessage());

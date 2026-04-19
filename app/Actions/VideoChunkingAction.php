@@ -44,10 +44,8 @@ readonly class VideoChunkingAction
 
         if ($video->status == 'completed') {
             $this->videoService->update($clientVideo->video_id, ['status' => 'uploading'], $video);
-//        $video = new Video('fa78d0c1-cb14-42d4-9c8f-6808b2145cf2', '50mb.mp4', 'localhost/tmp/50mb.mp4', 'uploading', [], 'localhost/videos/fa78d0c1-cb14-42d4-9c8f-6808b2145cf2', 300, 'http://localhost:8002/api/videos/fa78d0c1-cb14-42d4-9c8f-6808b2145cf2/playlist.m3u8');
-//            $video->key_path = 'localhost/keys/fbb02066-16d5-4996-8442-d11198455f6c';
             $this->cloudService->uploadKeyAndChunkedFiles($video);
-            $this->videoService->update($clientVideo->video_id, ['status' => 'uploaded']);
+            $this->videoService->update($clientVideo->video_id, ['status' => 'processed & uploaded']);
         }
         \Cache::forget('client_base_url_' . $clientVideo->video_id);
 
