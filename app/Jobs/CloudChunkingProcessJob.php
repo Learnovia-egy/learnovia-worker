@@ -35,7 +35,9 @@ class CloudChunkingProcessJob implements ShouldQueue
         try {
             $videoChunkingAction->handle($this->client_video_id);
         } catch (\Throwable $e) {
+            //<editor-fold desc="debug">
             Debugger::exception($e, 'job exception');
+            //</editor-fold>
             throw new \Exception($e->getMessage());
         }
     }
