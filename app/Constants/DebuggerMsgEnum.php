@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Constants;
 enum DebuggerMsgEnum: string
 {
     case FAILED_RESPONSE = 'Failed Response';

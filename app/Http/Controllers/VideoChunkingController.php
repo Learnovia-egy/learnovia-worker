@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Debugger;
-use App\DebuggerMsgEnum;
+use App\Constants\Debugger;
+use App\Constants\DebuggerMsgEnum;
 use App\Jobs\CloudChunkingProcessJob;
 use App\Models\Client;
 use Illuminate\Http\Request;

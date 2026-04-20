@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Constants;
 
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Promises\LazyPromise;

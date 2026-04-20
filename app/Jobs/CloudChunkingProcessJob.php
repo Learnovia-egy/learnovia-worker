@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\VideoChunkingAction;
-use App\Debugger;
+use App\Constants\Debugger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
