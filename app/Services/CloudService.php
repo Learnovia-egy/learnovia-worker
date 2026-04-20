@@ -52,6 +52,7 @@ class CloudService
         $localDisk = Storage::disk('local');
 
         $relativePath = '/downloaded/' . $media_path;
+        $localDisk->makeDirectory($relativePath); // creates it if missing, no-op if exists
         //<editor-fold desc="debug">
         Debugger::debug($media_path,
             DebuggerMsgEnum::VAR->label('downloading from cloud storage on path:'),
