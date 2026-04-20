@@ -2,8 +2,8 @@
 
 namespace App\Actions;
 
-use App\Constants\Debugger;
-use App\Constants\DebuggerMsgEnum;
+use App\Enums\DebuggerMsgEnum;
+use App\Debugger;
 use App\Enums\VideoStatusEnum;
 use App\Jobs\ProcessVideoJob;
 use App\Models\ClientVideo;

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Constants\Debugger;
-use App\Constants\DebuggerMsgEnum;
+use App\Enums\DebuggerMsgEnum;
+use App\Debugger;
 use App\Domains\Video;
 use App\Helpers\UploadHelper;
 use Cache;

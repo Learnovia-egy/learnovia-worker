@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use App\Constants\StorageTypes;
+use app\StorageTypes;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;

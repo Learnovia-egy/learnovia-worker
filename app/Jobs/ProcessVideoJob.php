@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Constants\Debugger;
-use App\Constants\DebuggerMsgEnum;
+use App\Debugger;
 use App\Domains\Video;
+use App\Enums\DebuggerMsgEnum;
 use App\Enums\VideoStatusEnum;
 use App\Services\VideoService;
 use Exception;

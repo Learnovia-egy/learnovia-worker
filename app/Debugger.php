@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Constants;
+namespace app;
 
+use App\Enums\DebuggerMsgEnum;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Promises\LazyPromise;
 

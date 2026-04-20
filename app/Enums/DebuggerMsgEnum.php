@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Constants;
+namespace App\Enums;
 enum DebuggerMsgEnum: string
 {
     case FAILED_RESPONSE = 'Failed Response';
@@ -16,7 +16,7 @@ enum DebuggerMsgEnum: string
     public function label(string $additionalMsg = ''): string
     {
         return match ($this) {
-            self::FAILED_RESPONSE => 'Failed Response, '. $additionalMsg,
+            self::FAILED_RESPONSE => 'Failed Response, ' . $additionalMsg,
             self::OBJECT_CREATION => $additionalMsg . ' Creation',
             self::REQUEST => $additionalMsg . ' Request',
             self::VAR => $additionalMsg . ' ' . self::VAR->value,
