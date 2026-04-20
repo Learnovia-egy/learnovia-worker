@@ -280,6 +280,7 @@ class ProcessVideoJob implements ShouldQueue
 
             $this->videoService->update($videoId,
                 [
+                    'status' => VideoStatusEnum::Chunked->value,
                     'segments_count' => count(glob("{$publicDir}/seg_*.ts")),
                     'playlist_url' => $clientBaseUrl . "api/videos/{$videoId}/playlist.m3u8",
                     'key_path' => $relativeKeyPath,

@@ -2,8 +2,8 @@
 
 namespace App\Actions;
 
-use App\Enums\DebuggerMsgEnum;
 use App\Debugger;
+use App\Enums\DebuggerMsgEnum;
 use App\Enums\VideoStatusEnum;
 use App\Jobs\ProcessVideoJob;
 use App\Models\ClientVideo;
@@ -43,7 +43,7 @@ readonly class VideoChunkingAction
         Debugger::debug($video, DebuggerMsgEnum::VAR->label('video after ProcessVideoJob'));
         //</editor-fold>
 
-        if ($video->status == 'completed') {
+        if ($video->status == VideoStatusEnum::Chunked) {
             $this->videoService->update($clientVideo->video_id, ['status' => VideoStatusEnum::Uploading->value], $video);
             $this->cloudService->uploadKeyAndChunkedFiles($video);
             $this->videoService->update($clientVideo->video_id, ['status' => VideoStatusEnum::Processed->value]);

@@ -46,7 +46,7 @@ class CloudService
     /**
      * @throws \Exception
      */
-    public function downloadFile(string $clientName, string $media_path): string
+    public function downloadFile(string $media_path): string
     {
         $localDisk = Storage::disk('local');
 

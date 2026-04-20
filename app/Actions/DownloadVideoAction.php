@@ -36,7 +36,7 @@ class DownloadVideoAction
         $clientBaseUrl = $client['base_url'];
         $file_name = PATHINFO($media_path, PATHINFO_BASENAME);
 
-        $relativeFilePath = $this->cloudService->downloadFile($clientName, $media_path);
+        $relativeFilePath = $this->cloudService->downloadFile($media_path);
         //<editor-fold desc="debug">
         Debugger::debug($relativeFilePath, DebuggerMsgEnum::VAR->label('relativeFilePath'));
 //</editor-fold>
