@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Actions\VideoChunkingAction;
 use App\Debugger;
+use App\Enums\DebuggerQueueEnum;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -36,7 +37,7 @@ class CloudChunkingProcessJob implements ShouldQueue
             $videoChunkingAction->handle($this->client_video_id);
         } catch (\Throwable $e) {
             //<editor-fold desc="debug">
-            Debugger::exception($e, 'job exception');
+            Debugger::exception($e, 'job exception', queueEnum: DebuggerQueueEnum::CloudVideoProcess);
             //</editor-fold>
             throw new \Exception($e->getMessage());
         }

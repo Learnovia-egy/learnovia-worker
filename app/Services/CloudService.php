@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
-use App\Enums\DebuggerMsgEnum;
 use App\Debugger;
 use App\Domains\Video;
+use App\Enums\DebuggerMsgEnum;
+use App\Enums\DebuggerQueueEnum;
 use App\Helpers\UploadHelper;
 use Cache;
 use Illuminate\Support\Facades\Storage;
@@ -52,15 +53,21 @@ class CloudService
 
         $relativePath = '/downloaded/' . $media_path;
         //<editor-fold desc="debug">
-        Debugger::debug($media_path, DebuggerMsgEnum::VAR->label('downloading from cloud storage on path:'));
+        Debugger::debug($media_path,
+            DebuggerMsgEnum::VAR->label('downloading from cloud storage on path:'),
+            queueEnum: DebuggerQueueEnum::Downloading);
         //</editor-fold>
         $stream = UploadHelper::StorageCloudDriver()->readStream($media_path);
         //<editor-fold desc="debug">
-        Debugger::debug($relativePath, DebuggerMsgEnum::VAR->label('writing stream to relativePath'));
+        Debugger::debug($relativePath,
+            DebuggerMsgEnum::VAR->label('writing stream to relativePath'),
+            queueEnum: DebuggerQueueEnum::Downloading);
         //</editor-fold>
         $localDisk->writeStream($relativePath, $stream);
         //<editor-fold desc="debug">
-        Debugger::debug($localDisk->exists($relativePath), DebuggerMsgEnum::VAR->label('is file exists in / downloaded ? '));
+        Debugger::debug($localDisk->exists($relativePath),
+            DebuggerMsgEnum::VAR->label('is file exists in / downloaded ? '),
+            queueEnum: DebuggerQueueEnum::Downloading);
 //</editor-fold>
 
         if ($localDisk->exists($relativePath))
@@ -77,37 +84,50 @@ class CloudService
     {
         $client = Cache::get('client_base_url_' . $video->id);
         //<editor-fold desc="debug">
-        Debugger::debug($client, DebuggerMsgEnum::VAR->label('Cache client_base_url_'));
+        Debugger::debug($client, DebuggerMsgEnum::VAR->label('Cache client_base_url_'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
 
         if ($client === null) throw new \Exception('Client not found');
         $clientName = $client['client_name'];
         $videosPath = "app/public/$clientName";
         //<editor-fold desc="debug">
-        Debugger::debug($videosPath, DebuggerMsgEnum::VAR->label('local video path'));
+        Debugger::debug($videosPath,
+            DebuggerMsgEnum::VAR->label('local video path'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
 
         $keyPath = $video->key_path;
         //<editor-fold desc="debug">
-        Debugger::debug($keyPath, DebuggerMsgEnum::VAR->label('key path'));
-        Debugger::debug(Storage::disk('local')->path($keyPath), DebuggerMsgEnum::VAR->label('storage path'));
+        Debugger::debug($keyPath,
+            DebuggerMsgEnum::VAR->label('key path'),
+            queueEnum: DebuggerQueueEnum::Uploading);
+        Debugger::debug(Storage::disk('local')->path($keyPath),
+            DebuggerMsgEnum::VAR->label('storage path'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
 
         if (!Storage::disk('local')->exists($keyPath))
             throw new \Exception('Key file not found');
-        $localFile = 'app/' . $keyPath;
+        $localFile = 'app/private/' . $keyPath;
         //<editor-fold desc="debug">
-        Debugger::debug($localFile, DebuggerMsgEnum::VAR->label('uploading key file to cloud storage'));
+        Debugger::debug($localFile,
+            DebuggerMsgEnum::VAR->label('uploading key file to cloud storage'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
         $stat = $this->uploadFile($keyPath, $localFile);
         //<editor-fold desc="debug">
-        Debugger::debug($stat, DebuggerMsgEnum::VAR->label('upload status'));
+        Debugger::debug($stat,
+            DebuggerMsgEnum::VAR->label('upload status'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
 
         $chunkFilesPath = Storage::disk('public')->files($video->files_path);
         if (empty($chunkFilesPath)) throw new \Exception('Chunk files not found');
         //<editor-fold desc="debug">
-        Debugger::debug($chunkFilesPath, DebuggerMsgEnum::VAR->label('ts files path'));
+        Debugger::debug($chunkFilesPath,
+            DebuggerMsgEnum::VAR->label('ts files path'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
 
         foreach ($chunkFilesPath as $chunkFilePath) {
@@ -118,11 +138,27 @@ class CloudService
                 throw new \Exception('Uploading file failed... ' . $chunkFilePath);
         }
         //<editor-fold desc="debug">
-        Debugger::debug('Finished uploading...');
+        Debugger::debug('Finished uploading...',
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
+        //<editor-fold desc="debug">
+        Debugger::debug($video->files_path,
+            DebuggerMsgEnum::VAR->label('files_path'),
+            queueEnum: DebuggerQueueEnum::Uploading
+        );
+        //</editor-fold>
+
         $stat = Storage::disk('public')->deleteDirectory($video->files_path);
         //<editor-fold desc="debug">
-        Debugger::debug($stat, DebuggerMsgEnum::VAR->label('is directory deleted?'));
+        Debugger::debug($stat,
+            DebuggerMsgEnum::VAR->label('are chunked files deleted?'),
+            queueEnum: DebuggerQueueEnum::Uploading);
+        //</editor-fold>
+        $stat = Storage::disk('local')->delete($video->key_path);
+        //<editor-fold desc="debug">
+        Debugger::debug($stat,
+            DebuggerMsgEnum::VAR->label('is key deleted?'),
+            queueEnum: DebuggerQueueEnum::Uploading);
         //</editor-fold>
 
         return true;

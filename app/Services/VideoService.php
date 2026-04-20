@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\DebuggerMsgEnum;
 use App\Debugger;
 use App\Domains\Video;
+use App\Enums\DebuggerQueueEnum;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Promises\LazyPromise;
@@ -73,7 +74,8 @@ class VideoService
         $client = Cache::get('client_base_url_' . $id);
         $clientBaseUrl = $client['base_url'];
         //<editor-fold desc="debug">
-        Debugger::debug($data, DebuggerMsgEnum::REQUEST->label('video update'));
+        Debugger::debug($data, DebuggerMsgEnum::REQUEST->label('video update'),
+        queueEnum: DebuggerQueueEnum::Callback);
 //</editor-fold>
 
         if ($video !== null) {
@@ -84,17 +86,25 @@ class VideoService
         }
         $api = $clientBaseUrl . 'api/videos/' . $id;
         //<editor-fold desc="debug">
-        Debugger::debug($video, DebuggerMsgEnum::VAR->label('video updated'));
-        Debugger::debug($api, DebuggerMsgEnum::VAR->label('callback video update api'));
+        Debugger::debug($video, DebuggerMsgEnum::VAR->label('video updated'),
+            queueEnum: DebuggerQueueEnum::Callback);
+        Debugger::debug($api, DebuggerMsgEnum::VAR->label('callback video update api'),
+            queueEnum: DebuggerQueueEnum::Callback);
         //</editor-fold>
 
         try {
             $res = Http::timeout(30)->patch($api, $data);
             if ($res->failed()) {
-                Debugger::response($res, DebuggerMsgEnum::RESPONSE->label('video update failed'));
+                //<editor-fold desc="debug">
+                Debugger::response($res,
+                    DebuggerMsgEnum::RESPONSE->label('video update failed'),
+                    queueEnum: DebuggerQueueEnum::Callback);
+                //</editor-fold>
             }
             //<editor-fold desc="debug">
-            Debugger::debug($res, DebuggerMsgEnum::RESPONSE->label('video api update response'));
+            Debugger::debug($res,
+                DebuggerMsgEnum::RESPONSE->label('video api update response'),
+                queueEnum: DebuggerQueueEnum::Callback);
             //</editor-fold>
             return $res;
         } catch (Exception $e) {
