@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Debugger;
 use App\DebuggerMsgEnum;
 use App\Domains\Video;
+use App\Enums\VideoStatusEnum;
 use App\Services\VideoService;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -54,7 +55,7 @@ class ProcessVideoJob implements ShouldQueue
         $clientBaseUrl = $client['base_url'];
 
         $this->videoService->update($videoId, [
-            'status' => 'processing',
+            'status' => VideoStatusEnum::Chunking->value,
         ], $this->video);
 
         try { // --- PATH CONFIGURATION ---
@@ -226,7 +227,7 @@ class ProcessVideoJob implements ShouldQueue
                 Debugger::debug('YES', DebuggerMsgEnum::VAR->label('is returnCode 0'));
                 //</editor-fold>
                 $this->videoService->update($videoId, [
-                    'status' => 'failed',
+                    'status' => VideoStatusEnum::Failed->value,
                 ], $this->video);
                 Log::error("FFmpeg Failed: " . implode("\n", $output));
                 throw new Exception('FFmpeg Failed');
@@ -279,7 +280,6 @@ class ProcessVideoJob implements ShouldQueue
 
             $this->videoService->update($videoId,
                 [
-                    'status' => 'completed',
                     'segments_count' => count(glob("{$publicDir}/seg_*.ts")),
                     'playlist_url' => $clientBaseUrl . "api/videos/{$videoId}/playlist.m3u8",
                     'key_path' => $relativeKeyPath,
@@ -301,12 +301,12 @@ class ProcessVideoJob implements ShouldQueue
             if ($isAttempLessThanTries) {
                 $this->videoService->update($videoId, [
                     'retries' => $this->attempts() - 1,
-                    'status' => 'pending',
+                    'status' => VideoStatusEnum::Pending->value,
                 ], $this->video);
                 throw $e; // triggers the retry
             } else
                 $data = [
-                    'status' => 'failed',
+                    'status' => VideoStatusEnum::Failed->value,
                     'retries' => $this->attempts()
                 ];
 

@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Debugger;
 use App\DebuggerMsgEnum;
 use App\Domains\Video;
+use App\Enums\VideoStatusEnum;
 use App\Services\CloudService;
 use App\Services\VideoService;
 use Exception;
@@ -50,7 +51,7 @@ class DownloadVideoAction
         //<editor-fold desc="debug">
         Debugger::debug($temp_path, DebuggerMsgEnum::VAR->label('temp_path'));
 //</editor-fold>
-        $video = new Video($id, $file_name, $temp_path, 'downloaded', $metadata);
+        $video = new Video($id, $file_name, $temp_path, VideoStatusEnum::Downloaded->value, $metadata);
         //<editor-fold desc="debug">
         Debugger::debug($video, DebuggerMsgEnum::VAR->label('video after new'));
 //</editor-fold>
