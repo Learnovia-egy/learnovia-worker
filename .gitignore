@@ -24,3 +24,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 laradumps.yaml
+storage/app/public
+storage/app/private
