@@ -221,7 +221,7 @@ class ProcessVideoJob implements ShouldQueue
                 '-c:v', $videoCodecFlag,
                 '-c:a', $audioCodecFlag,
                 '-hls_time', '10',
-                '-hls_base_url', config('app.cloud_base_url').$videoPath,
+                '-hls_base_url', config('app.cloud_base_url') . $videoPath . '/',
                 '-hls_list_size', '0',
                 '-hls_key_info_file', escapeshellarg($keyInfoPath),
                 '-hls_segment_filename', escapeshellarg("{$publicDir}/seg_%03d.ts"),
