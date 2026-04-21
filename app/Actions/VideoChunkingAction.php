@@ -60,6 +60,9 @@ readonly class VideoChunkingAction
             $this->videoService->update($clientVideo->video_id, ['status' => VideoStatusEnum::Processed->value]);
         }
         \Cache::forget('client_base_url_' . $clientVideo->video_id);
+        //<editor-fold desc="debug">
+        Debugger::debug('Clear Cache: ' . $clientVideo->video_id, queueEnum: DebuggerQueueEnum::CloudVideoProcess);
+        //</editor-fold>
 
     }
 }

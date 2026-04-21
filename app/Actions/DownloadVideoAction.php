@@ -35,6 +35,9 @@ class DownloadVideoAction
             DebuggerMsgEnum::VAR->label('cache client_base_url_'),
             queueEnum: DebuggerQueueEnum::Downloading);
 //</editor-fold>
+        if (is_null($client)) {
+            throw new Exception('client not found');
+        }
         $clientName = $client['client_name'];
         $clientBaseUrl = $client['base_url'];
         $file_name = PATHINFO($media_path, PATHINFO_BASENAME);
