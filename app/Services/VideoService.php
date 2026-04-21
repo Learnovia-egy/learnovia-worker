@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Enums\DebuggerMsgEnum;
 use App\Debugger;
 use App\Domains\Video;
+use App\Enums\DebuggerMsgEnum;
 use App\Enums\DebuggerQueueEnum;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -75,7 +75,7 @@ class VideoService
         $clientBaseUrl = $client['base_url'];
         //<editor-fold desc="debug">
         Debugger::debug($data, DebuggerMsgEnum::REQUEST->label('video update'),
-        queueEnum: DebuggerQueueEnum::Callback);
+            queueEnum: DebuggerQueueEnum::Callback);
 //</editor-fold>
 
         if ($video !== null) {

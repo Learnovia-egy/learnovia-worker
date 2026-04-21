@@ -52,7 +52,6 @@ class CloudService
         $localDisk = Storage::disk('local');
 
         $relativePath = '/downloaded/' . $media_path;
-        $localDisk->makeDirectory($relativePath); // creates it if missing, no-op if exists
         //<editor-fold desc="debug">
         Debugger::debug($media_path,
             DebuggerMsgEnum::VAR->label('downloading from cloud storage on path:'),
@@ -69,9 +68,12 @@ class CloudService
         Debugger::debug($localDisk->exists($relativePath),
             DebuggerMsgEnum::VAR->label('is file exists in / downloaded ? '),
             queueEnum: DebuggerQueueEnum::Downloading);
+        Debugger::debug(is_file(Storage::disk('local')->path($relativePath)),
+            DebuggerMsgEnum::VAR->label('is file is a file ?'),
+            queueEnum: DebuggerQueueEnum::Downloading);
 //</editor-fold>
 
-        if ($localDisk->exists($relativePath))
+        if (is_file($localDisk->path($relativePath)))
             return $relativePath;
 //            return $localDisk->readStream($relativePath);
         else
