@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\ClientCacheRepo;
 use App\Debugger;
 use App\Domains\Video;
 use App\Enums\DebuggerMsgEnum;
@@ -71,7 +72,7 @@ class VideoService
      */
     public function update(string $id, $data, ?Video &$video = null): LazyPromise|PromiseInterface|Response|null
     {
-        $client = Cache::get('client_base_url_' . $id);
+        $client = ClientCacheRepo::get($id);
         $clientBaseUrl = $client['base_url'];
         //<editor-fold desc="debug">
         Debugger::debug($data, DebuggerMsgEnum::REQUEST->label('video update'),

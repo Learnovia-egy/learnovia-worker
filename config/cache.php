@@ -47,6 +47,12 @@ return [
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
+        'client_base' => [
+            'driver' => 'database',
+            'table' => 'client_base',
+            'connection' => null,
+        ],
+
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),

@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\ClientCacheRepo;
 use App\Debugger;
 use App\Domains\Video;
 use App\Enums\DebuggerMsgEnum;
@@ -29,7 +30,7 @@ class DownloadVideoAction
      */
     public function handle(string $id, string $media_path): Video
     {
-        $client = Cache::get('client_base_url_' . $id);
+        $client = ClientCacheRepo::get('client_base_url_' . $id);
         //<editor-fold desc="debug">
         Debugger::debug($client,
             DebuggerMsgEnum::VAR->label('cache client_base_url_'),

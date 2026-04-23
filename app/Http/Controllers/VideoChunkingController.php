@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ClientCacheRepo;
 use App\Debugger;
 use App\Enums\DebuggerMsgEnum;
 use App\Enums\DebuggerQueueEnum;
@@ -39,7 +40,7 @@ class VideoChunkingController extends Controller
         Storage::disk('local')->makeDirectory($client->name);
 
         $data = ['base_url' => $client->base_url, 'client_name' => $client->name];
-        Cache::put('client_base_url_' . $request->video_id, $data);
+        ClientCacheRepo::put($request->video_id, $data);
 
         //<editor-fold desc="debug">
         Debugger::debug($data,
