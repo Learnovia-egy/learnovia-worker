@@ -52,7 +52,7 @@ class ProcessVideoJob implements ShouldQueue
             DebuggerMsgEnum::VAR->label('videoId in ProcessVideoJob'),
             queueEnum: DebuggerQueueEnum::Chunking);
         //</editor-fold>
-        $client = ClientCacheRepo::get('client_base_url_' . $videoId);
+        $client = ClientCacheRepo::get($videoId);
         //<editor-fold desc="debug">
         Debugger::debug($client,
             DebuggerMsgEnum::VAR->label('get cache key: client_base_url_'),

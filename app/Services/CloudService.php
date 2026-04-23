@@ -86,7 +86,7 @@ class CloudService
      */
     public function uploadKeyAndChunkedFiles(Video $video): bool
     {
-        $client = ClientCacheRepo::get('client_base_url_' . $video->id);
+        $client = ClientCacheRepo::get($video->id);
         //<editor-fold desc="debug">
         Debugger::debug($client, DebuggerMsgEnum::VAR->label('Cache client_base_url_'),
             queueEnum: DebuggerQueueEnum::Uploading);

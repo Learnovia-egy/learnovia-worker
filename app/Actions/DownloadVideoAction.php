@@ -30,7 +30,7 @@ class DownloadVideoAction
      */
     public function handle(string $id, string $media_path): Video
     {
-        $client = ClientCacheRepo::get('client_base_url_' . $id);
+        $client = ClientCacheRepo::get($id);
         //<editor-fold desc="debug">
         Debugger::debug($client,
             DebuggerMsgEnum::VAR->label('cache client_base_url_'),
