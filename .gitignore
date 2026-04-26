@@ -24,3 +24,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 laradumps.yaml
+/storage/app/
+/storage/framework/
+/storage/logs/
