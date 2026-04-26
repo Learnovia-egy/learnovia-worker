@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Actions\VideoChunkingAction;
-use App\Debugger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,6 +14,7 @@ class CloudChunkingProcessJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 0;
+    public $tries = 1;
 
     /**
      * Create a new job instance.
@@ -32,11 +32,6 @@ class CloudChunkingProcessJob implements ShouldQueue
      */
     public function handle(VideoChunkingAction $videoChunkingAction): void
     {
-        try {
-            $videoChunkingAction->handle($this->client_video_id);
-        } catch (\Throwable $e) {
-            Debugger::exception($e, 'job exception');
-            throw new \Exception($e->getMessage());
-        }
+        $videoChunkingAction->handle($this->client_video_id);
     }
 }
