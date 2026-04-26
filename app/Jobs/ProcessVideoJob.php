@@ -58,6 +58,12 @@ class ProcessVideoJob implements ShouldQueue
             DebuggerMsgEnum::VAR->label('get cache key: client_base_url_'),
             queueEnum: DebuggerQueueEnum::Chunking);
         //</editor-fold>
+
+        if (is_null($client)) {
+            Debugger::error("Client data not found in cache for Video ID: {$videoId}", queueEnum: DebuggerQueueEnum::Chunking);
+            throw new Exception("Client data not found in cache for Video ID: {$videoId}");
+        }
+
         $clientName = $client['client_name'];
         $clientBaseUrl = $client['base_url'];
 
