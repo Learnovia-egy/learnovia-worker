@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('worker_credentials', function (Blueprint $table) {
             $table->id();
-            $table->string('service_name')->unique();
             $table->string('password_hash');
             $table->timestamps();
         });

@@ -13,12 +13,8 @@ class WorkerCredentialSeeder extends Seeder
      */
     public function run(): void
     {
-        $servers = ['new', 'tms', 'sun', 'ramsis'];
-        foreach ($servers as $server) {
-            WorkerCredential::create([
-                'service_name' => $server,
-                'password_hash' => Hash::make('L3arn0vi@2026'),
-            ]);
-        }
+        WorkerCredential::create([
+            'password_hash' => Hash::make('L3arn0vi@2026'),
+        ]);
     }
 }

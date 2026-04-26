@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+
 use App\Models\WorkerCredential;
 use Illuminate\Support\Facades\Hash;
 
@@ -23,7 +24,7 @@ class VerifyWorkerPassword
             return response()->json(['message' => 'Unauthorized: Missing worker password'], 401);
         }
 
-        $credential = WorkerCredential::where('service_name', 'learnovia-main-app')->first();
+        $credential = WorkerCredential::first();
 
         if (!$credential || !Hash::check($password, $credential->password_hash)) {
             return response()->json(['message' => 'Unauthorized: Invalid worker password'], 401);
